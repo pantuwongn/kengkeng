@@ -203,15 +203,27 @@ const TTS = {
 const audioCache = new Map();
 let curAudio = null, omniFails = 0;
 
-let voices = [];
-function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
-if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-function pickVoice(lang){
-  if(!voices.length) loadVoices();
+// ---- device voice (Web Speech API) config ----
+// อยากล็อกเสียงเจาะจง ใส่ชื่อเสียงที่ thName/enName (เปิด console แล้วพิมพ์ listVoices() เพื่อดูชื่อ)
+// เว้นว่าง = เลือกเสียงที่ดีที่สุดในเครื่องให้อัตโนมัติ.  rate = ความเร็วรวม (น้อย=ช้า/ชัด)
+const VOICE = { thName:'', enName:'', rate:0.82, pitch:1.08 };
+let voices = [], vTh=null, vEn=null;
+function chooseVoice(lang, forced){
   const pref = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith(lang));
-  const nice = pref.find(v=>/enhanced|premium|siri|natural|neural/i.test(v.name));
-  return nice || pref[0] || null;
+  if(forced){ const f = voices.find(v=>v.name===forced); if(f) return f; }
+  return pref.find(v=>/enhanced|premium|siri|natural|neural/i.test(v.name))  // เสียงคุณภาพสูง
+      || pref.find(v=>v.localService)                                        // เสียงในเครื่อง (ลื่น/ออฟไลน์)
+      || pref[0] || null;
 }
+function loadVoices(){
+  voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  vTh = chooseVoice('th', VOICE.thName);
+  vEn = chooseVoice('en', VOICE.enName);
+}
+function pickVoice(lang){ if(!voices.length) loadVoices(); return lang.slice(0,2)==='th' ? vTh : vEn; }
+window.listVoices = () => (window.speechSynthesis?speechSynthesis.getVoices():[])
+  .map(v=>`${v.name} [${v.lang}]${v.localService?'':' (network)'}`);
+if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
 function stopAudio(){
   if(curAudio){ try{ curAudio.pause(); }catch(e){} curAudio=null; }
   if(window.speechSynthesis){ try{ speechSynthesis.cancel(); }catch(e){} }
@@ -247,7 +259,9 @@ function speakBrowser(text, lang, rate){
   try{
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang; u.rate = rate; u.pitch = 1.12;
+    u.lang = lang;
+    u.rate = Math.max(0.5, Math.min(1.2, (rate||0.9) * (VOICE.rate/0.9)));
+    u.pitch = VOICE.pitch;
     const v = pickVoice(lang.slice(0,2)); if(v) u.voice = v;
     speechSynthesis.speak(u);
   }catch(e){}
@@ -327,39 +341,39 @@ const WORDS = [
     {t:'กา',e:'🐦',s:'กอ อา'}, {t:'ตา',e:'👁️',s:'ตอ อา'}, {t:'ปู',e:'🦀',s:'ปอ อู'},
     {t:'งู',e:'🐍',s:'งอ อู'}, {t:'หู',e:'👂',s:'หอ อู'}, {t:'ปลา',e:'🐟',s:'ปอ ลอ อา'},
     {t:'หมา',e:'🐶',s:'หอ มอ อา'}, {t:'เสือ',e:'🐯',s:'สอ เอือ'}, {t:'เรือ',e:'🚤',s:'รอ เอือ'},
-    {t:'ไก่',e:'🐔',s:'กอ ไอ'}, {t:'มือ',e:'🖐️',s:'มอ อือ'}, {t:'ปี',e:'🎂',s:'ปอ อี'},
+    {t:'ไก่',e:'🐔',s:'กอ ไอ ไม้เอก'}, {t:'มือ',e:'🖐️',s:'มอ อือ'}, {t:'ปี',e:'🎂',s:'ปอ อี'},
   ]},
   {key:'kong', label:'แม่ กง', hint:'สะกดด้วย ง', words:[
-    {t:'ลิง',e:'🐒',s:'ลอ อิ งอ'}, {t:'ช้าง',e:'🐘',s:'ชอ อา งอ'}, {t:'ธง',e:'🚩',s:'ทอ อะ งอ'},
-    {t:'ผึ้ง',e:'🐝',s:'ผอ อึ งอ'}, {t:'กลอง',e:'🥁',s:'กอ ลอ ออ งอ'}, {t:'ถัง',e:'🪣',s:'ถอ อะ งอ'},
+    {t:'ลิง',e:'🐒',s:'ลอ อิ งอ'}, {t:'ช้าง',e:'🐘',s:'ชอ อา งอ ไม้โท'}, {t:'ธง',e:'🚩',s:'ทอ งอ'},
+    {t:'ผึ้ง',e:'🐝',s:'ผอ อึ งอ ไม้โท'}, {t:'กลอง',e:'🥁',s:'กอ ลอ ออ งอ'}, {t:'ถัง',e:'🪣',s:'ถอ อะ งอ'},
     {t:'หงส์',e:'🦢',s:'หอ งอ'}, {t:'ยุง',e:'🦟',s:'ยอ อุ งอ'},
   ]},
   {key:'kon', label:'แม่ กน', hint:'สะกดด้วย น', words:[
-    {t:'กิน',e:'🍽️',s:'กอ อิ นอ'}, {t:'ฝน',e:'🌧️',s:'ฝอ นอ'}, {t:'บ้าน',e:'🏠',s:'บอ อา นอ'},
+    {t:'กิน',e:'🍽️',s:'กอ อิ นอ'}, {t:'ฝน',e:'🌧️',s:'ฝอ นอ'}, {t:'บ้าน',e:'🏠',s:'บอ อา นอ ไม้โท'},
     {t:'นอน',e:'😴',s:'นอ ออ นอ'}, {t:'จาน',e:'🍽️',s:'จอ อา นอ'}, {t:'ปีน',e:'🧗',s:'ปอ อี นอ'},
-    {t:'วาฬ',e:'🐋',s:'วอ อา นอ'}, {t:'ต้น',e:'🌱',s:'ตอ อน'},
+    {t:'ฟัน',e:'🦷',s:'ฟอ อะ นอ'}, {t:'ต้น',e:'🌱',s:'ตอ นอ ไม้โท'},
   ]},
   {key:'kom', label:'แม่ กม', hint:'สะกดด้วย ม', words:[
-    {t:'ส้ม',e:'🍊',s:'สอ มอ'}, {t:'นม',e:'🥛',s:'นอ มอ'}, {t:'ลม',e:'🌬️',s:'ลอ มอ'},
-    {t:'แยม',e:'🍓',s:'ยอ แอ มอ'}, {t:'ยิ้ม',e:'😊',s:'ยอ อิ มอ'}, {t:'เข็ม',e:'📌',s:'ขอ เอะ มอ'},
+    {t:'ส้ม',e:'🍊',s:'สอ มอ ไม้โท'}, {t:'นม',e:'🥛',s:'นอ มอ'}, {t:'ลม',e:'🌬️',s:'ลอ มอ'},
+    {t:'แยม',e:'🍓',s:'ยอ แอ มอ'}, {t:'ยิ้ม',e:'😊',s:'ยอ อิ มอ ไม้โท'}, {t:'เข็ม',e:'📌',s:'ขอ เอะ มอ'},
     {t:'ปาล์ม',e:'🌴',s:'ปอ อา มอ'}, {t:'ครีม',e:'🍦',s:'คอ รอ อี มอ'},
   ]},
   {key:'koey', label:'แม่ เกย', hint:'สะกดด้วย ย', words:[
     {t:'ควาย',e:'🐃',s:'คอ วอ อา ยอ'}, {t:'ยาย',e:'👵',s:'ยอ อา ยอ'}, {t:'เนย',e:'🧈',s:'นอ เอ ยอ'},
-    {t:'สร้อย',e:'📿',s:'สอ รอ ออ ยอ'}, {t:'นาย',e:'👨',s:'นอ อา ยอ'}, {t:'สาย',e:'⛓️',s:'สอ อา ยอ'},
+    {t:'สร้อย',e:'📿',s:'สอ รอ ออ ยอ ไม้โท'}, {t:'นาย',e:'👨',s:'นอ อา ยอ'}, {t:'สาย',e:'⛓️',s:'สอ อา ยอ'},
   ]},
   {key:'kok', label:'แม่ กก', hint:'สะกดด้วย ก', words:[
     {t:'นก',e:'🐦',s:'นอ กอ'}, {t:'ปาก',e:'👄',s:'ปอ อา กอ'}, {t:'เด็ก',e:'🧒',s:'ดอ เอะ กอ'},
-    {t:'ผัก',e:'🥬',s:'ผอ อะ กอ'}, {t:'ลูก',e:'👶',s:'ลอ อู กอ'}, {t:'เมฆ',e:'☁️',s:'มอ เอ กอ'},
+    {t:'ผัก',e:'🥬',s:'ผอ อะ กอ'}, {t:'ลูก',e:'👶',s:'ลอ อู กอ'}, {t:'เมฆ',e:'☁️',s:'มอ เอ คอ'},
     {t:'จมูก',e:'👃',s:'จะ มูก'}, {t:'สุนัข',e:'🐕',s:'สุ นัก'},
   ]},
   {key:'kot', label:'แม่ กด', hint:'สะกดด้วย ด', words:[
-    {t:'รถ',e:'🚗',s:'รอ ดอ'}, {t:'เป็ด',e:'🦆',s:'ปอ เอะ ดอ'}, {t:'มด',e:'🐜',s:'มอ ดอ'},
-    {t:'อูฐ',e:'🐫',s:'ออ อู ดอ'}, {t:'สมุด',e:'📓',s:'สะ มุด'}, {t:'ขวด',e:'🫙',s:'ขอ วอ ดอ'},
-    {t:'บัตร',e:'💳',s:'บอ อะ ดอ'}, {t:'เพชร',e:'💎',s:'พอ เอะ ดอ'},
+    {t:'รถ',e:'🚗',s:'รอ ถอ'}, {t:'เป็ด',e:'🦆',s:'ปอ เอะ ดอ'}, {t:'มด',e:'🐜',s:'มอ ดอ'},
+    {t:'อูฐ',e:'🐫',s:'ออ อู ถอ'}, {t:'สมุด',e:'📓',s:'สะ มุด'}, {t:'ขวด',e:'🫙',s:'ขอ วอ ดอ'},
+    {t:'บัตร',e:'💳',s:'บอ อะ ตอ'}, {t:'เพชร',e:'💎',s:'พอ เอะ ชอ'},
   ]},
   {key:'kob', label:'แม่ กบ', hint:'สะกดด้วย บ', words:[
-    {t:'กบ',e:'🐸',s:'กอ บอ'}, {t:'รูป',e:'🖼️',s:'รอ อู บอ'}, {t:'ตะเกียบ',e:'🥢',s:'ตะ เกียบ'},
+    {t:'กบ',e:'🐸',s:'กอ บอ'}, {t:'รูป',e:'🖼️',s:'รอ อู ปอ'}, {t:'ตะเกียบ',e:'🥢',s:'ตะ เกียบ'},
     {t:'ยีราฟ',e:'🦒',s:'ยี ราบ'}, {t:'ตะขาบ',e:'🐛',s:'ตะ ขาบ'}, {t:'กราบ',e:'🙏',s:'กอ รอ อา บอ'},
   ]},
   {key:'two', label:'คำ 2 พยางค์', hint:'อ่านทีละพยางค์', words:[
@@ -529,7 +543,7 @@ function thaiPlay(){
     </div>
     <div class="feedback" id="fb"></div>`;
   document.getElementById('hear').onclick=()=>speak(answer.t,'th-TH',0.9);
-  setTimeout(()=>speak(answer.t,'th-TH',0.9),250);
+  speak(answer.t,'th-TH',0.9);
   document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
     if(tq.done) return;
     const fb=document.getElementById('fb');
@@ -608,7 +622,7 @@ function engPlayLetters(){
     <div class="feedback" id="fb"></div>`;
   const hear=()=>speak(answer[0]+'. '+answer[1],'en-US',0.85);
   document.getElementById('hear').onclick=hear;
-  setTimeout(hear,250);
+  hear();
   document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
     if(eq.done) return;
     const fb=document.getElementById('fb');
@@ -671,7 +685,7 @@ function engPlayWord(cat){
     <div class="feedback" id="fb"></div>`;
   const hear=()=>speak(answer.w,'en-US',0.85);
   document.getElementById('hear').onclick=hear;
-  setTimeout(hear,250);
+  hear();
   document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
     if(eq.done) return;
     const fb=document.getElementById('fb');
