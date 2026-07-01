@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="เก่งเก่ง">
+<meta name="theme-color" content="#FFF3E0">
+<title>เก่งเก่ง · เรียนสนุก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Mali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF6E9; --bg2:#FFEFD8;
+  --ink:#3A2E28; --muted:#9A8B80;
+  --card:#FFFFFF; --line:#F0E3D2;
+  --thai:#FF7A59; --thai-soft:#FFE9E2;
+  --eng:#31B6C9;  --eng-soft:#DDF4F7;
+  --math:#8B7BE8; --math-soft:#ECE8FB;
+  --star:#FFC13C; --good:#3FBF7F; --good-soft:#E1F6EC;
+  --shadow:0 8px 0 rgba(0,0,0,.06), 0 14px 28px rgba(120,80,40,.14);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; height:100%;}
+body{
+  font-family:'Mali','Fredoka',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 500px at 15% -10%, #FFF9F0 0%, transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, #FFEAD6 0%, transparent 55%),
+    var(--bg);
+  -webkit-user-select:none; user-select:none; touch-action:manipulation;
+  overflow-x:hidden;
+}
+#app{max-width:820px; margin:0 auto; padding:14px 16px 30px; min-height:100%;}
+
+/* top bar */
+.top{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+.top .brand{font-family:'Fredoka'; font-weight:700; font-size:22px; letter-spacing:.3px; color:var(--thai); display:flex; align-items:center; gap:8px;}
+.top .brand b{font-family:'Mali'; font-weight:700; color:var(--ink);}
+.spacer{flex:1;}
+.pill{
+  display:inline-flex; align-items:center; gap:7px; background:#fff; border:2px solid var(--line);
+  border-radius:999px; padding:8px 14px; font-family:'Fredoka'; font-weight:600; font-size:18px;
+  box-shadow:0 4px 0 rgba(0,0,0,.05); color:var(--ink);
+}
+.pill.star b{color:#C9860E;}
+.iconbtn{
+  width:48px; height:48px; border-radius:16px; border:2px solid var(--line); background:#fff;
+  font-size:22px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:0 4px 0 rgba(0,0,0,.05); transition:transform .08s;
+}
+.iconbtn:active{transform:translateY(2px);}
+
+/* home */
+.hero{text-align:center; padding:14px 8px 6px;}
+.mascot{font-size:78px; line-height:1; display:inline-block; animation:bob 2.6s ease-in-out infinite; filter:drop-shadow(0 10px 12px rgba(0,0,0,.12));}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-12px) rotate(2deg);}}
+.hero h1{font-family:'Mali'; font-weight:700; font-size:30px; margin:8px 0 2px;}
+.hero p{color:var(--muted); font-size:16px; margin:0 0 6px;}
+
+.menu{display:grid; grid-template-columns:1fr; gap:16px; margin-top:14px;}
+@media(min-width:620px){.menu{grid-template-columns:1fr 1fr 1fr;}}
+.tile{
+  border:none; cursor:pointer; text-align:left; color:#fff; border-radius:26px; padding:22px 20px;
+  min-height:150px; display:flex; flex-direction:column; justify-content:space-between;
+  box-shadow:var(--shadow); transition:transform .1s; position:relative; overflow:hidden;
+}
+.tile:active{transform:translateY(3px) scale(.995);}
+.tile .emo{font-size:52px; line-height:1;}
+.tile .t{font-family:'Mali'; font-weight:700; font-size:26px;}
+.tile .s{font-size:15px; opacity:.92; margin-top:2px;}
+.tile .glow{position:absolute; right:-30px; top:-30px; width:130px; height:130px; border-radius:50%; background:rgba(255,255,255,.18);}
+.tile.thai{background:linear-gradient(150deg,#FF9166,#FF6A45);}
+.tile.eng{background:linear-gradient(150deg,#43C6D8,#26A6BA);}
+.tile.math{background:linear-gradient(150deg,#9C8CF0,#7A67E0);}
+
+/* activity screen */
+.screen{animation:fade .25s ease both;}
+@keyframes fade{from{opacity:0; transform:translateY(8px);}to{opacity:1; transform:none;}}
+.head{display:flex; align-items:center; gap:12px; margin:4px 0 14px;}
+.head h2{font-family:'Mali'; font-weight:700; font-size:24px; margin:0;}
+.head .dot{width:14px; height:14px; border-radius:50%;}
+
+.tabs{display:inline-flex; background:#fff; border:2px solid var(--line); border-radius:999px; padding:5px; gap:4px; margin-bottom:16px;}
+.tab{border:none; background:transparent; font-family:'Mali'; font-weight:600; font-size:17px; color:var(--muted); padding:9px 20px; border-radius:999px; cursor:pointer;}
+.tab.on{color:#fff;}
+.tab.on.thai{background:var(--thai);} .tab.on.eng{background:var(--eng);} .tab.on.math{background:var(--math);}
+
+.catrow{display:flex; gap:8px; overflow-x:auto; padding:2px 2px 8px; margin-bottom:6px; -webkit-overflow-scrolling:touch;}
+.catrow::-webkit-scrollbar{height:0;}
+.catchip{flex:0 0 auto; border:2px solid var(--line); background:#fff; color:var(--muted);
+  font-family:'Mali'; font-weight:600; font-size:16px; padding:8px 15px; border-radius:999px; cursor:pointer; white-space:nowrap;}
+.catchip.on{background:var(--thai-soft); border-color:var(--thai); color:#D8492A;}
+.catrow.eng .catchip.on{background:var(--eng-soft); border-color:var(--eng); color:#1C7A88;}
+.chip.spellchip{border-color:var(--thai); color:#D8492A;}
+.chip.spellchip.eng{border-color:var(--eng); color:#1C7A88; font-family:'Fredoka';}
+
+/* flashcard */
+.card{
+  background:var(--card); border:3px solid var(--line); border-radius:30px; padding:26px 20px;
+  box-shadow:var(--shadow); text-align:center; position:relative;
+}
+.card .pic{font-size:96px; line-height:1; margin-bottom:6px;}
+.bigword{font-family:'Mali'; font-weight:700; font-size:96px; line-height:1.05; cursor:pointer; display:inline-block;}
+.bigword.pop{animation:pop .4s ease;}
+@keyframes pop{0%{transform:scale(1);}40%{transform:scale(1.14);}100%{transform:scale(1);}}
+.sub{color:var(--muted); font-size:17px; margin-top:4px;}
+.pieces{display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin:16px 0 4px;}
+.chip{
+  min-width:76px; height:76px; padding:0 10px; border-radius:18px; background:#fff; border:3px solid;
+  font-family:'Mali'; font-weight:700; font-size:44px; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  transition:transform .08s;
+}
+.chip:active{transform:scale(.94);}
+.chip.c{border-color:var(--thai); color:#D8492A;} .chip.v{border-color:var(--math); color:#6D5AD6;}
+.op{font-size:34px; font-weight:700; color:var(--muted);}
+
+.row{display:flex; gap:12px; margin-top:20px;}
+.btn{
+  flex:1; border:none; border-radius:20px; padding:16px; font-family:'Mali'; font-weight:700; font-size:20px;
+  cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.10); transition:transform .08s; color:#fff;
+}
+.btn:active{transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.10);}
+.btn.ghost{background:#fff; color:var(--ink); border:2px solid var(--line); box-shadow:0 5px 0 rgba(0,0,0,.05);}
+.btn.play{background:var(--good);}
+.btn.thai{background:var(--thai);} .btn.eng{background:var(--eng);} .btn.math{background:var(--math);}
+
+/* quiz */
+.prompt{background:var(--card); border:3px solid var(--line); border-radius:26px; padding:22px; text-align:center; box-shadow:var(--shadow);}
+.prompt .q{font-family:'Fredoka'; font-weight:700; font-size:56px; letter-spacing:1px;}
+.prompt .qth{font-family:'Mali';}
+.visual{font-size:40px; line-height:1.35; margin:6px 0 2px; word-break:break-word;}
+.hintbtn{margin-top:8px;}
+.options{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:18px;}
+.opt{
+  border:3px solid var(--line); background:#fff; border-radius:22px; padding:20px 10px; cursor:pointer;
+  font-family:'Fredoka'; font-weight:700; font-size:40px; color:var(--ink); box-shadow:0 6px 0 rgba(0,0,0,.06);
+  transition:transform .08s; min-height:84px;
+}
+.opt.thword{font-family:'Mali'; font-size:46px;}
+.opt:active{transform:translateY(3px);}
+.opt.right{background:var(--good-soft); border-color:var(--good); color:#238a56; animation:pop .4s;}
+.opt.wrong{background:#FDE6E1; border-color:#F0A08C; color:#c14b2c; animation:shake .4s;}
+@keyframes shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px);}40%{transform:translateX(8px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
+
+.opsel{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:8px;}
+.opsel .btn{font-size:22px;}
+
+.feedback{text-align:center; font-family:'Mali'; font-weight:700; font-size:24px; min-height:34px; margin-top:14px;}
+.feedback.g{color:var(--good);} .feedback.b{color:#E08a6a;}
+
+.progress{display:flex; gap:6px; justify-content:center; margin:12px 0 2px;}
+.progress i{width:12px; height:12px; border-radius:50%; background:var(--line); display:inline-block;}
+.progress i.done{background:var(--star);}
+
+/* confetti */
+.confetti{position:fixed; top:-40px; font-size:26px; pointer-events:none; z-index:60; animation:fall linear forwards;}
+@keyframes fall{to{transform:translateY(105vh) rotate(360deg); opacity:.9;}}
+
+.foot{text-align:center; color:var(--muted); font-size:13px; margin-top:26px;}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001s !important;}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------------- state & helpers ---------------- */
+const App = document.getElementById('app');
+const State = { stars: 0, muted: false, screen: 'home' };
+
+// persistent storage that never breaks (falls back to memory in sandboxed previews)
+const Mem = {};
+const Store = {
+  get(k){ try{ const v=localStorage.getItem(k); return v===null?(k in Mem?Mem[k]:null):v; }catch(e){ return k in Mem?Mem[k]:null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){ Mem[k]=v; } }
+};
+State.stars = parseInt(Store.get('stars')||'0',10) || 0;
+State.muted = Store.get('muted')==='1';
+
+/* ---- audio: speech + chimes ---- */
+let voices = [];
+function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
+if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
+function pickVoice(lang){
+  if(!voices.length) loadVoices();
+  const pref = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith(lang));
+  return pref[0] || null;
+}
+function speak(text, lang='th-TH', rate=1){
+  if(State.muted || !window.speechSynthesis) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang; u.rate = rate; u.pitch = 1.15;
+    const v = pickVoice(lang.slice(0,2)); if(v) u.voice = v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+let AC=null;
+function chime(good){
+  if(State.muted) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const notes = good ? [523,659,784] : [330,247];
+    notes.forEach((f,i)=>{
+      const o=AC.createOscillator(), g=AC.createGain();
+      o.type='sine'; o.frequency.value=f;
+      o.connect(g); g.connect(AC.destination);
+      const t=AC.currentTime + i*0.11;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.25,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);
+      o.start(t); o.stop(t+0.24);
+    });
+  }catch(e){}
+}
+function confetti(){
+  const em=['🎉','⭐','🌟','🎊','✨','🧡','💙','💜'];
+  for(let i=0;i<26;i++){
+    const s=document.createElement('div');
+    s.className='confetti'; s.textContent=em[i%em.length];
+    s.style.left=Math.random()*100+'vw';
+    s.style.animationDuration=(1.6+Math.random()*1.4)+'s';
+    s.style.fontSize=(20+Math.random()*22)+'px';
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),3200);
+  }
+}
+function addStar(n=1){
+  State.stars+=n; Store.set('stars',State.stars);
+  const el=document.getElementById('starcount'); if(el) el.textContent=State.stars;
+}
+const rnd = a => a[Math.floor(Math.random()*a.length)];
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+const praise = ['เก่งมาก!','สุดยอด!','ถูกต้อง!','เยี่ยมเลย!','เก่งที่สุด!'];
+const retry  = ['ลองอีกครั้งนะ','เกือบแล้ว!','ไม่เป็นไร ลองใหม่'];
+
+/* ---------------- data ---------------- */
+// Thai word bank, grouped by final-consonant class (มาตราตัวสะกด). s = แจกลูก (spell-out)
+const WORDS = [
+  {key:'kaka', label:'แม่ ก กา', hint:'ไม่มีตัวสะกด', words:[
+    {t:'กา',e:'🐦',s:'กอ อา'}, {t:'ตา',e:'👁️',s:'ตอ อา'}, {t:'ปู',e:'🦀',s:'ปอ อู'},
+    {t:'งู',e:'🐍',s:'งอ อู'}, {t:'หู',e:'👂',s:'หอ อู'}, {t:'ปลา',e:'🐟',s:'ปอ ลอ อา'},
+    {t:'หมา',e:'🐶',s:'หอ มอ อา'}, {t:'เสือ',e:'🐯',s:'สอ เอือ'}, {t:'เรือ',e:'🚤',s:'รอ เอือ'},
+    {t:'ไก่',e:'🐔',s:'กอ ไอ'}, {t:'มือ',e:'🖐️',s:'มอ อือ'}, {t:'ปี',e:'🎂',s:'ปอ อี'},
+  ]},
+  {key:'kong', label:'แม่ กง', hint:'สะกดด้วย ง', words:[
+    {t:'ลิง',e:'🐒',s:'ลอ อิ งอ'}, {t:'ช้าง',e:'🐘',s:'ชอ อา งอ'}, {t:'ธง',e:'🚩',s:'ทอ อะ งอ'},
+    {t:'ผึ้ง',e:'🐝',s:'ผอ อึ งอ'}, {t:'กลอง',e:'🥁',s:'กอ ลอ ออ งอ'}, {t:'ถัง',e:'🪣',s:'ถอ อะ งอ'},
+    {t:'หงส์',e:'🦢',s:'หอ งอ'}, {t:'ยุง',e:'🦟',s:'ยอ อุ งอ'},
+  ]},
+  {key:'kon', label:'แม่ กน', hint:'สะกดด้วย น', words:[
+    {t:'กิน',e:'🍽️',s:'กอ อิ นอ'}, {t:'ฝน',e:'🌧️',s:'ฝอ นอ'}, {t:'บ้าน',e:'🏠',s:'บอ อา นอ'},
+    {t:'นอน',e:'😴',s:'นอ ออ นอ'}, {t:'จาน',e:'🍽️',s:'จอ อา นอ'}, {t:'ปีน',e:'🧗',s:'ปอ อี นอ'},
+    {t:'วาฬ',e:'🐋',s:'วอ อา นอ'}, {t:'ต้น',e:'🌱',s:'ตอ อน'},
+  ]},
+  {key:'kom', label:'แม่ กม', hint:'สะกดด้วย ม', words:[
+    {t:'ส้ม',e:'🍊',s:'สอ มอ'}, {t:'นม',e:'🥛',s:'นอ มอ'}, {t:'ลม',e:'🌬️',s:'ลอ มอ'},
+    {t:'แยม',e:'🍓',s:'ยอ แอ มอ'}, {t:'ยิ้ม',e:'😊',s:'ยอ อิ มอ'}, {t:'เข็ม',e:'📌',s:'ขอ เอะ มอ'},
+    {t:'ปาล์ม',e:'🌴',s:'ปอ อา มอ'}, {t:'ครีม',e:'🍦',s:'คอ รอ อี มอ'},
+  ]},
+  {key:'koey', label:'แม่ เกย', hint:'สะกดด้วย ย', words:[
+    {t:'ควาย',e:'🐃',s:'คอ วอ อา ยอ'}, {t:'ยาย',e:'👵',s:'ยอ อา ยอ'}, {t:'เนย',e:'🧈',s:'นอ เอ ยอ'},
+    {t:'สร้อย',e:'📿',s:'สอ รอ ออ ยอ'}, {t:'นาย',e:'👨',s:'นอ อา ยอ'}, {t:'สาย',e:'⛓️',s:'สอ อา ยอ'},
+  ]},
+  {key:'kok', label:'แม่ กก', hint:'สะกดด้วย ก', words:[
+    {t:'นก',e:'🐦',s:'นอ กอ'}, {t:'ปาก',e:'👄',s:'ปอ อา กอ'}, {t:'เด็ก',e:'🧒',s:'ดอ เอะ กอ'},
+    {t:'ผัก',e:'🥬',s:'ผอ อะ กอ'}, {t:'ลูก',e:'👶',s:'ลอ อู กอ'}, {t:'เมฆ',e:'☁️',s:'มอ เอ กอ'},
+    {t:'จมูก',e:'👃',s:'จะ มูก'}, {t:'สุนัข',e:'🐕',s:'สุ นัก'},
+  ]},
+  {key:'kot', label:'แม่ กด', hint:'สะกดด้วย ด', words:[
+    {t:'รถ',e:'🚗',s:'รอ ดอ'}, {t:'เป็ด',e:'🦆',s:'ปอ เอะ ดอ'}, {t:'มด',e:'🐜',s:'มอ ดอ'},
+    {t:'อูฐ',e:'🐫',s:'ออ อู ดอ'}, {t:'สมุด',e:'📓',s:'สะ มุด'}, {t:'ขวด',e:'🫙',s:'ขอ วอ ดอ'},
+    {t:'บัตร',e:'💳',s:'บอ อะ ดอ'}, {t:'เพชร',e:'💎',s:'พอ เอะ ดอ'},
+  ]},
+  {key:'kob', label:'แม่ กบ', hint:'สะกดด้วย บ', words:[
+    {t:'กบ',e:'🐸',s:'กอ บอ'}, {t:'รูป',e:'🖼️',s:'รอ อู บอ'}, {t:'ตะเกียบ',e:'🥢',s:'ตะ เกียบ'},
+    {t:'ยีราฟ',e:'🦒',s:'ยี ราบ'}, {t:'ตะขาบ',e:'🐛',s:'ตะ ขาบ'}, {t:'กราบ',e:'🙏',s:'กอ รอ อา บอ'},
+  ]},
+  {key:'two', label:'คำ 2 พยางค์', hint:'อ่านทีละพยางค์', words:[
+    {t:'กระเป๋า',e:'🎒',s:'กระ เป๋า'}, {t:'มะม่วง',e:'🥭',s:'มะ ม่วง'}, {t:'นาฬิกา',e:'🕐',s:'นา ลิ กา'},
+    {t:'ตุ๊กตา',e:'🧸',s:'ตุ๊ก กะ ตา'}, {t:'รองเท้า',e:'👟',s:'รอง เท้า'}, {t:'กระต่าย',e:'🐰',s:'กระ ต่าย'},
+    {t:'ผีเสื้อ',e:'🦋',s:'ผี เสื้อ'}, {t:'จักรยาน',e:'🚲',s:'จัก กระ ยาน'}, {t:'สับปะรด',e:'🍍',s:'สับ ปะ รด'},
+    {t:'มะพร้าว',e:'🥥',s:'มะ พร้าว'}, {t:'ดินสอ',e:'✏️',s:'ดิน สอ'}, {t:'ดอกไม้',e:'🌸',s:'ดอก ไม้'},
+  ]},
+];
+const ALLW = WORDS.reduce((a,c)=>a.concat(c.words),[]);
+function wsize(str, max=92){ const n=[...str].length; return Math.max(42, Math.min(max, Math.round(500/n))); }
+// English A-Z
+const ABC = [
+  ['A','apple','🍎'],['B','bear','🐻'],['C','cat','🐱'],['D','dog','🐶'],
+  ['E','egg','🥚'],['F','fish','🐟'],['G','grapes','🍇'],['H','hat','🎩'],
+  ['I','ice cream','🍦'],['J','juice','🧃'],['K','kite','🪁'],['L','lion','🦁'],
+  ['M','moon','🌙'],['N','nest','🪺'],['O','orange','🍊'],['P','pig','🐷'],
+  ['Q','queen','👑'],['R','rainbow','🌈'],['S','sun','☀️'],['T','tiger','🐯'],
+  ['U','umbrella','☂️'],['V','violin','🎻'],['W','watermelon','🍉'],['X','box','📦'],
+  ['Y','yo-yo','🪀'],['Z','zebra','🦓'],
+];
+// English categories: letters (A–Z) + themed words. r = คำอ่านไทย (pronunciation hint)
+const ENGCATS = [
+  {key:'abc', label:'A–Z', letters:true},
+  {key:'animals', label:'สัตว์ Animals', words:[
+    {w:'cat',e:'🐱',r:'แค็ท'},{w:'dog',e:'🐶',r:'ด็อก'},{w:'pig',e:'🐷',r:'พิก'},
+    {w:'cow',e:'🐮',r:'คาว'},{w:'duck',e:'🦆',r:'ดั๊ก'},{w:'fish',e:'🐟',r:'ฟิช'},
+    {w:'bird',e:'🐦',r:'เบิร์ด'},{w:'lion',e:'🦁',r:'ไล-ออน'},{w:'bear',e:'🐻',r:'แบร์'},
+    {w:'frog',e:'🐸',r:'ฟร็อก'},{w:'bee',e:'🐝',r:'บี'},{w:'elephant',e:'🐘',r:'เอ-เล-เฟินท์'},
+  ]},
+  {key:'food', label:'อาหาร Food', words:[
+    {w:'apple',e:'🍎',r:'แอ็พ-เพิ่ล'},{w:'banana',e:'🍌',r:'บะ-นา-น่า'},{w:'egg',e:'🥚',r:'เอ็ก'},
+    {w:'milk',e:'🥛',r:'มิลก์'},{w:'rice',e:'🍚',r:'ไรซ์'},{w:'cake',e:'🍰',r:'เค้ก'},
+    {w:'bread',e:'🍞',r:'เบร็ด'},{w:'ice cream',e:'🍦',r:'ไอศ-กรีม'},{w:'orange',e:'🍊',r:'ออ-เร้นจ์'},
+    {w:'grapes',e:'🍇',r:'เกรพส์'},
+  ]},
+  {key:'colors', label:'สี Colors', words:[
+    {w:'red',e:'🔴',r:'เร้ด'},{w:'blue',e:'🔵',r:'บลู'},{w:'green',e:'🟢',r:'กรีน'},
+    {w:'yellow',e:'🟡',r:'เยล-โล่'},{w:'orange',e:'🟠',r:'ออ-เร้นจ์'},{w:'purple',e:'🟣',r:'เพอร์-เพิ่ล'},
+    {w:'pink',e:'🌸',r:'พิงก์'},{w:'black',e:'⚫',r:'แบล็ก'},{w:'white',e:'⚪',r:'ไวท์'},{w:'brown',e:'🟤',r:'บราวน์'},
+  ]},
+  {key:'numbers', label:'ตัวเลข Numbers', words:[
+    {w:'one',e:'1️⃣',r:'วัน'},{w:'two',e:'2️⃣',r:'ทู'},{w:'three',e:'3️⃣',r:'ธรี'},
+    {w:'four',e:'4️⃣',r:'โฟร์'},{w:'five',e:'5️⃣',r:'ไฟว์'},{w:'six',e:'6️⃣',r:'ซิกซ์'},
+    {w:'seven',e:'7️⃣',r:'เซ-เว่น'},{w:'eight',e:'8️⃣',r:'เอท'},{w:'nine',e:'9️⃣',r:'ไนน์'},{w:'ten',e:'🔟',r:'เท็น'},
+  ]},
+  {key:'cvc', label:'คำง่าย CVC', words:[
+    {w:'cat',e:'🐱',r:'แค็ท'},{w:'hat',e:'🎩',r:'แฮท'},{w:'bat',e:'🦇',r:'แบท'},
+    {w:'sun',e:'☀️',r:'ซัน'},{w:'pig',e:'🐷',r:'พิก'},{w:'hen',e:'🐔',r:'เฮ็น'},
+    {w:'pen',e:'🖊️',r:'เพ็น'},{w:'cup',e:'☕',r:'คัพ'},{w:'bus',e:'🚌',r:'บัส'},
+    {w:'box',e:'📦',r:'บ็อกซ์'},{w:'top',e:'🔝',r:'ท็อป'},{w:'bed',e:'🛏️',r:'เบ็ด'},
+  ]},
+];
+const ALLE = ENGCATS.filter(c=>c.words).reduce((a,c)=>a.concat(c.words),[]);
+
+/* ---------------- top bar & router ---------------- */
+function topBar(){
+  return `<div class="top">
+    <div class="brand">🦊 <b>เก่งเก่ง</b></div>
+    <div class="spacer"></div>
+    <div class="pill star">⭐ <b id="starcount">${State.stars}</b></div>
+    <button class="iconbtn" id="mute">${State.muted?'🔇':'🔊'}</button>
+  </div>`;
+}
+function wireTop(){
+  const m=document.getElementById('mute');
+  if(m) m.onclick=()=>{ State.muted=!State.muted; Store.set('muted',State.muted?'1':'0'); m.textContent=State.muted?'🔇':'🔊'; if(window.speechSynthesis)speechSynthesis.cancel(); };
+}
+function go(screen){ State.screen=screen; render(); window.scrollTo(0,0); }
+
+function render(){
+  if(State.screen==='home') return renderHome();
+  if(State.screen==='thai') return renderThai();
+  if(State.screen==='eng')  return renderEng();
+  if(State.screen==='math') return renderMath();
+}
+
+/* ---------------- HOME ---------------- */
+function renderHome(){
+  App.innerHTML = topBar() + `
+  <div class="screen">
+    <div class="hero">
+      <div class="mascot">🦊</div>
+      <h1>มาเรียนสนุกกันเถอะ!</h1>
+      <p>แตะเลือกสิ่งที่อยากเล่นได้เลย</p>
+    </div>
+    <div class="menu">
+      <button class="tile thai" data-go="thai"><div class="glow"></div>
+        <div class="emo">ก ข</div><div><div class="t">ภาษาไทย</div><div class="s">ผสมคำ มีตัวสะกด 2 พยางค์</div></div></button>
+      <button class="tile eng" data-go="eng"><div class="glow"></div>
+        <div class="emo">A B C</div><div><div class="t">ภาษาอังกฤษ</div><div class="s">A–Z และคำศัพท์ มีรูป</div></div></button>
+      <button class="tile math" data-go="math"><div class="glow"></div>
+        <div class="emo">➕➖✖️</div><div><div class="t">เลข</div><div class="s">บวก ลบ คูณ สนุก ๆ</div></div></button>
+    </div>
+    <div class="foot">สะสมดาว ⭐ ได้ทุกครั้งที่ตอบถูก · แตะรูปลำโพงเพื่อปิด/เปิดเสียง</div>
+  </div>`;
+  wireTop();
+  document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ chime(true); go(b.dataset.go); });
+}
+
+/* ---------------- THAI ---------------- */
+let thaiMode='learn', thaiCat=0, thaiIdx=0;
+function renderThai(){
+  App.innerHTML = topBar() + `
+  <div class="screen">
+    <div class="head"><button class="iconbtn" id="back">🏠</button>
+      <span class="dot" style="background:var(--thai)"></span><h2>ภาษาไทย · ผสมคำ</h2></div>
+    <div class="catrow">
+      ${WORDS.map((c,i)=>`<button class="catchip ${i===thaiCat?'on':''}" data-cat="${i}">${c.label}</button>`).join('')}
+    </div>
+    <div class="tabs">
+      <button class="tab thai ${thaiMode==='learn'?'on':''}" data-m="learn">เรียน</button>
+      <button class="tab thai ${thaiMode==='play'?'on':''}" data-m="play">เล่นเกม</button>
+    </div>
+    <div id="area"></div>
+  </div>`;
+  wireTop();
+  document.getElementById('back').onclick=()=>go('home');
+  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ thaiMode=b.dataset.m; renderThai(); });
+  document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ thaiCat=+b.dataset.cat; thaiIdx=0; renderThai(); });
+  thaiMode==='learn'? thaiLearn() : thaiPlay();
+}
+function thaiLearn(){
+  const cat=WORDS[thaiCat]; const list=cat.words; if(thaiIdx>=list.length) thaiIdx=0;
+  const w=list[thaiIdx]; const chips=w.s.split(' ');
+  document.getElementById('area').innerHTML = `
+    <div class="card">
+      <div class="pic">${w.e}</div>
+      <div class="bigword" id="bw" style="font-size:${wsize(w.t)}px">${w.t}</div>
+      <div class="sub">${cat.label} · ${cat.hint} &nbsp;·&nbsp; แตะที่คำเพื่อฟังเสียง</div>
+      <div class="pieces">
+        ${chips.map(ch=>`<button class="chip c spellchip" style="font-size:${wsize(ch,40)}px">${ch}</button>`).join('<span class="op">·</span>')}
+      </div>
+      <div class="row"><button class="btn play" id="blend">🔊 อ่านทีละเสียง</button></div>
+      <div class="row">
+        <button class="btn ghost" id="prev">◀ ก่อนหน้า</button>
+        <button class="btn thai" id="next">คำต่อไป ▶ <small style="opacity:.8">${thaiIdx+1}/${list.length}</small></button>
+      </div>
+    </div>`;
+  const bw=document.getElementById('bw');
+  const pop=()=>{ bw.classList.remove('pop'); void bw.offsetWidth; bw.classList.add('pop'); };
+  const say=()=>{ pop(); speak(w.t,'th-TH',0.9); };
+  bw.onclick=say;
+  document.querySelectorAll('.spellchip').forEach((el,i)=>el.onclick=()=>speak(chips[i],'th-TH',0.85));
+  document.getElementById('blend').onclick=()=>{ speak(w.s,'th-TH',0.6); setTimeout(()=>{ pop(); speak(w.t,'th-TH',0.95); }, 300+chips.length*650); };
+  document.getElementById('next').onclick=()=>{ thaiIdx=(thaiIdx+1)%list.length; thaiLearn(); setTimeout(()=>speak(list[thaiIdx].t,'th-TH',0.9),150); };
+  document.getElementById('prev').onclick=()=>{ thaiIdx=(thaiIdx-1+list.length)%list.length; thaiLearn(); setTimeout(()=>speak(list[thaiIdx].t,'th-TH',0.9),150); };
+  setTimeout(say,120);
+}
+let tq=null;
+function thaiPlay(){
+  const list=WORDS[thaiCat].words;
+  const answer=rnd(list);
+  let pool=list.filter(x=>x.t!==answer.t);
+  while(pool.length<2){ const x=rnd(ALLW); if(x.t!==answer.t && !pool.find(p=>p.t===x.t)) pool.push(x); }
+  const opts=shuffle([answer, ...shuffle(pool).slice(0,2)]);
+  const fs=wsize(opts.reduce((a,b)=>a.t.length>b.t.length?a:b).t, 44);
+  tq={answer,done:false};
+  document.getElementById('area').innerHTML = `
+    <div class="prompt">
+      <div class="visual" style="font-size:74px">${answer.e}</div>
+      <div class="sub">แตะปุ่มฟังเสียง แล้วเลือกคำที่ได้ยิน</div>
+      <div class="row"><button class="btn play" id="hear">🔊 ฟังอีกครั้ง</button></div>
+    </div>
+    <div class="options">
+      ${opts.map(o=>`<button class="opt thword" data-w="${o.t}" style="font-size:${fs}px">${o.t}</button>`).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>`;
+  document.getElementById('hear').onclick=()=>speak(answer.t,'th-TH',0.9);
+  setTimeout(()=>speak(answer.t,'th-TH',0.9),250);
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(tq.done) return;
+    const fb=document.getElementById('fb');
+    if(b.dataset.w===answer.t){
+      tq.done=true; b.classList.add('right'); chime(true); confetti(); addStar();
+      const p=rnd(praise); fb.className='feedback g'; fb.textContent=p+' ⭐'; speak(p,'th-TH',1);
+      setTimeout(thaiPlay,1400);
+    }else{
+      b.classList.add('wrong'); chime(false);
+      const r=rnd(retry); fb.className='feedback b'; fb.textContent=r; speak(r,'th-TH',1);
+      setTimeout(()=>b.classList.remove('wrong'),450);
+    }
+  });
+}
+
+/* ---------------- ENGLISH ---------------- */
+let engMode='learn', engCat=0, engIdx=0;
+function renderEng(){
+  const cat=ENGCATS[engCat];
+  App.innerHTML = topBar() + `
+  <div class="screen">
+    <div class="head"><button class="iconbtn" id="back">🏠</button>
+      <span class="dot" style="background:var(--eng)"></span><h2>English · ${cat.letters?'A–Z':'คำศัพท์'}</h2></div>
+    <div class="catrow eng">
+      ${ENGCATS.map((c,i)=>`<button class="catchip ${i===engCat?'on':''}" data-cat="${i}">${c.label}</button>`).join('')}
+    </div>
+    <div class="tabs">
+      <button class="tab eng ${engMode==='learn'?'on':''}" data-m="learn">เรียน</button>
+      <button class="tab eng ${engMode==='play'?'on':''}" data-m="play">เล่นเกม</button>
+    </div>
+    <div id="area"></div>
+  </div>`;
+  wireTop();
+  document.getElementById('back').onclick=()=>go('home');
+  document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ engMode=b.dataset.m; renderEng(); });
+  document.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{ engCat=+b.dataset.cat; engIdx=0; renderEng(); });
+  if(cat.letters){ engMode==='learn'? engLearnLetters() : engPlayLetters(); }
+  else{ engMode==='learn'? engLearnWord(cat) : engPlayWord(cat); }
+}
+
+/* --- A–Z letters --- */
+function engLearnLetters(){
+  const [L,word,emo]=ABC[engIdx];
+  document.getElementById('area').innerHTML=`
+    <div class="card">
+      <div class="pic">${emo}</div>
+      <div class="bigword" id="bw" style="font-family:'Fredoka';color:var(--eng)">${L}<span style="font-size:.5em;color:var(--muted)"> ${L.toLowerCase()}</span></div>
+      <div class="sub" style="font-family:'Fredoka';font-size:24px">${word}</div>
+      <div class="row"><button class="btn play" id="say">🔊 ฟังเสียง</button></div>
+      <div class="row">
+        <button class="btn ghost" id="prev">◀</button>
+        <button class="btn eng" id="next">Next ▶ <small style="opacity:.8">${engIdx+1}/26</small></button>
+      </div>
+    </div>`;
+  const say=()=>{ const bw=document.getElementById('bw'); bw.classList.remove('pop'); void bw.offsetWidth; bw.classList.add('pop'); speak(L+'. '+word,'en-US',0.85); };
+  document.getElementById('bw').onclick=say;
+  document.getElementById('say').onclick=say;
+  document.getElementById('next').onclick=()=>{ engIdx=(engIdx+1)%ABC.length; engLearnLetters(); setTimeout(()=>speak(ABC[engIdx][0]+'. '+ABC[engIdx][1],'en-US',0.85),150); };
+  document.getElementById('prev').onclick=()=>{ engIdx=(engIdx-1+ABC.length)%ABC.length; engLearnLetters(); setTimeout(()=>speak(ABC[engIdx][0]+'. '+ABC[engIdx][1],'en-US',0.85),150); };
+  setTimeout(say,120);
+}
+let eq=null;
+function engPlayLetters(){
+  const answer=rnd(ABC);
+  const opts=shuffle([answer, ...shuffle(ABC.filter(x=>x[0]!==answer[0])).slice(0,3)]);
+  eq={answer,done:false};
+  document.getElementById('area').innerHTML=`
+    <div class="prompt">
+      <div class="visual" style="font-size:80px">${answer[2]}</div>
+      <div class="sub">ฟังเสียง แล้วเลือกตัวอักษรที่ถูก</div>
+      <div class="row"><button class="btn play" id="hear">🔊 ฟังอีกครั้ง</button></div>
+    </div>
+    <div class="options">
+      ${opts.map(o=>`<button class="opt" data-l="${o[0]}" style="font-family:'Fredoka';color:var(--eng)">${o[0]}</button>`).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>`;
+  const hear=()=>speak(answer[0]+'. '+answer[1],'en-US',0.85);
+  document.getElementById('hear').onclick=hear;
+  setTimeout(hear,250);
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(eq.done) return;
+    const fb=document.getElementById('fb');
+    if(b.dataset.l===answer[0]){
+      eq.done=true; b.classList.add('right'); chime(true); confetti(); addStar();
+      const p=rnd(praise); fb.className='feedback g'; fb.textContent=p+' ⭐'; speak('Yes! '+answer[0],'en-US',0.9);
+      setTimeout(engPlayLetters,1400);
+    }else{
+      b.classList.add('wrong'); chime(false);
+      fb.className='feedback b'; fb.textContent=rnd(retry);
+      setTimeout(()=>b.classList.remove('wrong'),450);
+    }
+  });
+}
+
+/* --- word categories --- */
+function engLearnWord(cat){
+  const list=cat.words; if(engIdx>=list.length) engIdx=0;
+  const o=list[engIdx]; const letters=[...o.w.replace(/ /g,'')];
+  document.getElementById('area').innerHTML=`
+    <div class="card">
+      <div class="pic">${o.e}</div>
+      <div class="bigword" id="bw" style="font-family:'Fredoka';color:var(--eng);font-size:${wsize(o.w,64)}px">${o.w}</div>
+      <div class="sub">อ่านว่า “${o.r}” &nbsp;·&nbsp; แตะคำเพื่อฟังเสียง</div>
+      <div class="pieces">
+        ${letters.map(ch=>`<button class="chip c spellchip eng">${ch.toUpperCase()}</button>`).join('')}
+      </div>
+      <div class="row"><button class="btn play" id="spell">🔊 สะกดทีละตัว</button></div>
+      <div class="row">
+        <button class="btn ghost" id="prev">◀ ก่อนหน้า</button>
+        <button class="btn eng" id="next">คำต่อไป ▶ <small style="opacity:.8">${engIdx+1}/${list.length}</small></button>
+      </div>
+    </div>`;
+  const bw=document.getElementById('bw');
+  const pop=()=>{ bw.classList.remove('pop'); void bw.offsetWidth; bw.classList.add('pop'); };
+  const say=()=>{ pop(); speak(o.w,'en-US',0.85); };
+  bw.onclick=say;
+  document.querySelectorAll('.spellchip').forEach((el,i)=>el.onclick=()=>speak(letters[i],'en-US',0.85));
+  document.getElementById('spell').onclick=()=>{ speak(letters.join(', '),'en-US',0.7); setTimeout(()=>{ pop(); speak(o.w,'en-US',0.9); }, 500+letters.length*550); };
+  document.getElementById('next').onclick=()=>{ engIdx=(engIdx+1)%list.length; engLearnWord(cat); setTimeout(()=>speak(list[engIdx].w,'en-US',0.85),150); };
+  document.getElementById('prev').onclick=()=>{ engIdx=(engIdx-1+list.length)%list.length; engLearnWord(cat); setTimeout(()=>speak(list[engIdx].w,'en-US',0.85),150); };
+  setTimeout(say,120);
+}
+function engPlayWord(cat){
+  const list=cat.words; const answer=rnd(list);
+  let pool=list.filter(x=>x.w!==answer.w);
+  while(pool.length<3){ const x=rnd(ALLE); if(x.w!==answer.w && !pool.find(p=>p.w===x.w)) pool.push(x); }
+  const opts=shuffle([answer, ...shuffle(pool).slice(0,3)]);
+  const fs=wsize(opts.reduce((a,b)=>a.w.length>b.w.length?a:b).w, 30);
+  eq={answer,done:false};
+  document.getElementById('area').innerHTML=`
+    <div class="prompt">
+      <div class="visual" style="font-size:78px">${answer.e}</div>
+      <div class="sub">ฟังเสียง แล้วเลือกคำที่ถูก</div>
+      <div class="row"><button class="btn play" id="hear">🔊 ฟังอีกครั้ง</button></div>
+    </div>
+    <div class="options">
+      ${opts.map(o=>`<button class="opt" data-w="${o.w}" style="font-family:'Fredoka';color:var(--eng);font-size:${fs}px">${o.w}</button>`).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>`;
+  const hear=()=>speak(answer.w,'en-US',0.85);
+  document.getElementById('hear').onclick=hear;
+  setTimeout(hear,250);
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(eq.done) return;
+    const fb=document.getElementById('fb');
+    if(b.dataset.w===answer.w){
+      eq.done=true; b.classList.add('right'); chime(true); confetti(); addStar();
+      const p=rnd(praise); fb.className='feedback g'; fb.textContent=p+' ⭐'; speak('Yes! '+answer.w,'en-US',0.9);
+      setTimeout(()=>engPlayWord(cat),1400);
+    }else{
+      b.classList.add('wrong'); chime(false);
+      fb.className='feedback b'; fb.textContent=rnd(retry);
+      setTimeout(()=>b.classList.remove('wrong'),450);
+    }
+  });
+}
+
+/* ---------------- MATH ---------------- */
+let mathOp=null, mq=null;
+function renderMath(){
+  App.innerHTML = topBar() + `
+  <div class="screen">
+    <div class="head"><button class="iconbtn" id="back">🏠</button>
+      <span class="dot" style="background:var(--math)"></span><h2>เลข · บวก ลบ คูณ</h2></div>
+    <div id="area"></div>
+  </div>`;
+  wireTop();
+  document.getElementById('back').onclick=()=> mathOp? (mathOp=null,renderMath()) : go('home');
+  mathOp? mathQuiz() : mathMenu();
+}
+function mathMenu(){
+  document.getElementById('area').innerHTML=`
+    <div class="prompt"><div class="visual" style="font-size:64px">🔢</div>
+      <div class="sub">อยากเล่นแบบไหนดี?</div></div>
+    <div class="opsel" style="margin-top:18px">
+      <button class="btn math" data-op="+">➕ บวก</button>
+      <button class="btn math" data-op="-">➖ ลบ</button>
+      <button class="btn math" data-op="×">✖️ คูณ</button>
+    </div>`;
+  document.querySelectorAll('[data-op]').forEach(b=>b.onclick=()=>{ mathOp=b.dataset.op; chime(true); renderMath(); });
+}
+function makeProblem(op){
+  let a,b,ans,vis='';
+  if(op==='+'){ a=1+Math.floor(Math.random()*9); b=1+Math.floor(Math.random()*(10-a<1?1:11-a)); if(a+b>15){b=1+Math.floor(Math.random()*5);} ans=a+b;
+    vis='🍎'.repeat(a)+'  ➕  '+'🍏'.repeat(b); }
+  else if(op==='-'){ a=3+Math.floor(Math.random()*10); b=1+Math.floor(Math.random()*(a-1)); ans=a-b;
+    vis='🍪'.repeat(a)+'  ➖  '+'✋'+b; }
+  else { a=1+Math.floor(Math.random()*5); b=1+Math.floor(Math.random()*5); ans=a*b;
+    vis=Array.from({length:a},()=>'🟣'.repeat(b)).join('  '); }
+  // options
+  const set=new Set([ans]);
+  while(set.size<3){ let d=ans+ (Math.floor(Math.random()*7)-3); if(d>=0 && d!==ans) set.add(d); }
+  return {a,b,op,ans,vis,opts:shuffle([...set])};
+}
+function mathQuiz(){
+  const p=makeProblem(mathOp); mq={p,done:false};
+  const opword = mathOp==='+'?'บวก':mathOp==='-'?'ลบ':'คูณ';
+  document.getElementById('area').innerHTML=`
+    <div class="tabs" style="margin-bottom:14px"><button class="tab math on">${mathOp==='+'?'➕ บวก':mathOp==='-'?'➖ ลบ':'✖️ คูณ'}</button></div>
+    <div class="prompt">
+      <div class="q">${p.a} ${p.op} ${p.b} = ?</div>
+      <div class="visual">${p.vis}</div>
+      <button class="btn ghost hintbtn" id="hint" style="max-width:200px;margin:8px auto 0">🔊 ฟังโจทย์</button>
+    </div>
+    <div class="options">
+      ${p.opts.map(o=>`<button class="opt" data-a="${o}">${o}</button>`).join('')}
+    </div>
+    <div class="feedback" id="fb"></div>`;
+  document.getElementById('hint').onclick=()=>speak(`${p.a} ${opword} ${p.b} เท่ากับเท่าไร`,'th-TH',0.95);
+  document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+    if(mq.done) return;
+    const fb=document.getElementById('fb');
+    if(parseInt(b.dataset.a,10)===p.ans){
+      mq.done=true; b.classList.add('right'); chime(true); confetti(); addStar();
+      const pr=rnd(praise); fb.className='feedback g'; fb.textContent=`${p.a} ${p.op} ${p.b} = ${p.ans}  ⭐`;
+      speak(pr+` ${p.a} ${opword} ${p.b} เท่ากับ ${p.ans}`,'th-TH',1);
+      setTimeout(mathQuiz,1600);
+    }else{
+      b.classList.add('wrong'); chime(false);
+      fb.className='feedback b'; fb.textContent=rnd(retry);
+      setTimeout(()=>b.classList.remove('wrong'),450);
+    }
+  });
+}
+
+/* ---------------- boot ---------------- */
+render();
+// nudge iOS speech engine awake on first touch
+document.body.addEventListener('touchstart',function once(){ try{ if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);} }catch(e){} document.body.removeEventListener('touchstart',once); }, {once:true});
+</script>
+</body>
+</html>
