@@ -184,24 +184,102 @@ const Store = {
 State.stars = parseInt(Store.get('stars')||'0',10) || 0;
 State.muted = Store.get('muted')==='1';
 
-/* ---- audio: speech + chimes ---- */
+/* ---- audio: pre-generated clips + speech fallback ---- */
+// Pre-generated voice clips (made by generate_audio.py, served from /audio). Primary source.
+// If a clip is missing, falls back to the optional live server, then the device voice.
+let clipMap = {};            // exact text -> 'audio/<file>'
+const clipObj = {};          // url -> Audio (cache)
+fetch('audio/manifest.json')
+  .then(r=> r.ok ? r.json() : null)
+  .then(m=>{ if(m){ for(const k in m) clipMap[k] = 'audio/' + m[k]; } })
+  .catch(()=>{});
+
+// Optional live OmniVoice server (off by default now that clips exist). Set enabled:true to use it.
+const TTS = {
+  enabled: false,
+  url: 'https://physicochemical-kathlyn-joltily.ngrok-free.dev/v1/audio/speech',
+  timeoutMs: 4500,
+};
+const audioCache = new Map();
+let curAudio = null, omniFails = 0;
+
 let voices = [];
 function loadVoices(){ voices = window.speechSynthesis ? speechSynthesis.getVoices() : []; }
 if(window.speechSynthesis){ loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
 function pickVoice(lang){
   if(!voices.length) loadVoices();
   const pref = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith(lang));
-  return pref[0] || null;
+  const nice = pref.find(v=>/enhanced|premium|siri|natural|neural/i.test(v.name));
+  return nice || pref[0] || null;
 }
-function speak(text, lang='th-TH', rate=1){
-  if(State.muted || !window.speechSynthesis) return;
+function stopAudio(){
+  if(curAudio){ try{ curAudio.pause(); }catch(e){} curAudio=null; }
+  if(window.speechSynthesis){ try{ speechSynthesis.cancel(); }catch(e){} }
+}
+function playClip(url){
+  let a = clipObj[url];
+  if(!a){ a = new Audio(url); clipObj[url] = a; }
+  try{ a.currentTime = 0; }catch(e){}
+  curAudio = a;
+  return a.play();
+}
+async function speakOmni(text, speed){
+  const key = text+'|'+speed;
+  try{
+    let url = audioCache.get(key);
+    if(!url){
+      const ctl = new AbortController();
+      const to = setTimeout(()=>ctl.abort(), TTS.timeoutMs);
+      const r = await fetch(TTS.url, { method:'POST',
+        headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},
+        body: JSON.stringify({ input:text, speed:speed }), signal: ctl.signal });
+      clearTimeout(to);
+      if(!r.ok) throw new Error('http '+r.status);
+      const blob = await r.blob();
+      if(blob.size < 1200) throw new Error('too small');
+      url = URL.createObjectURL(blob); audioCache.set(key, url);
+    }
+    await playClip(url); omniFails = 0; return true;
+  }catch(e){ if(++omniFails >= 2) TTS.enabled = false; return false; }
+}
+function speakBrowser(text, lang, rate){
+  if(!window.speechSynthesis) return;
   try{
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang; u.rate = rate; u.pitch = 1.15;
+    u.lang = lang; u.rate = rate; u.pitch = 1.12;
     const v = pickVoice(lang.slice(0,2)); if(v) u.voice = v;
     speechSynthesis.speak(u);
   }catch(e){}
+}
+// Speak one string: pre-generated clip -> (optional) live server -> device voice.
+function speak(text, lang='th-TH', rate=0.9){
+  if(State.muted) return;
+  stopAudio();
+  const url = clipMap[text];
+  if(url){ playClip(url).catch(()=>speakBrowser(text, lang, Math.max(0.6, rate-0.05))); return; }
+  const speed = Math.max(0.5, Math.min(1.1, rate));
+  if(TTS.enabled && TTS.url){
+    speakOmni(text, speed).then(ok=>{ if(!ok) speakBrowser(text, lang, Math.max(0.6, rate-0.05)); });
+  }else{
+    speakBrowser(text, lang, Math.max(0.6, rate-0.05));
+  }
+}
+// Play several clips back-to-back (e.g. spell then word, or a math sentence).
+// If any piece has no clip, speaks the whole phrase with the device voice instead.
+function speakSeq(parts, lang='th-TH'){
+  if(State.muted) return;
+  stopAudio();
+  const urls = parts.map(p=>clipMap[p]);
+  if(urls.some(u=>!u)){ speakBrowser(parts.join(' '), lang, 0.82); return; }
+  let i=0;
+  const next=()=>{
+    if(i>=urls.length) return;
+    const a = new Audio(urls[i]); curAudio = a;
+    a.onended = ()=>{ i++; next(); };
+    a.play().catch(()=>{});
+  };
+  next();
 }
 let AC=null;
 function chime(good){
@@ -426,7 +504,7 @@ function thaiLearn(){
   const say=()=>{ pop(); speak(w.t,'th-TH',0.9); };
   bw.onclick=say;
   document.querySelectorAll('.spellchip').forEach((el,i)=>el.onclick=()=>speak(chips[i],'th-TH',0.85));
-  document.getElementById('blend').onclick=()=>{ speak(w.s,'th-TH',0.6); setTimeout(()=>{ pop(); speak(w.t,'th-TH',0.95); }, 300+chips.length*650); };
+  document.getElementById('blend').onclick=()=>{ pop(); speakSeq([w.s, w.t]); };
   document.getElementById('next').onclick=()=>{ thaiIdx=(thaiIdx+1)%list.length; thaiLearn(); setTimeout(()=>speak(list[thaiIdx].t,'th-TH',0.9),150); };
   document.getElementById('prev').onclick=()=>{ thaiIdx=(thaiIdx-1+list.length)%list.length; thaiLearn(); setTimeout(()=>speak(list[thaiIdx].t,'th-TH',0.9),150); };
   setTimeout(say,120);
@@ -536,7 +614,7 @@ function engPlayLetters(){
     const fb=document.getElementById('fb');
     if(b.dataset.l===answer[0]){
       eq.done=true; b.classList.add('right'); chime(true); confetti(); addStar();
-      const p=rnd(praise); fb.className='feedback g'; fb.textContent=p+' ⭐'; speak('Yes! '+answer[0],'en-US',0.9);
+      const p=rnd(praise); fb.className='feedback g'; fb.textContent=p+' ⭐'; speak(answer[0]+'. '+answer[1],'en-US',0.9);
       setTimeout(engPlayLetters,1400);
     }else{
       b.classList.add('wrong'); chime(false);
@@ -569,7 +647,7 @@ function engLearnWord(cat){
   const say=()=>{ pop(); speak(o.w,'en-US',0.85); };
   bw.onclick=say;
   document.querySelectorAll('.spellchip').forEach((el,i)=>el.onclick=()=>speak(letters[i],'en-US',0.85));
-  document.getElementById('spell').onclick=()=>{ speak(letters.join(', '),'en-US',0.7); setTimeout(()=>{ pop(); speak(o.w,'en-US',0.9); }, 500+letters.length*550); };
+  document.getElementById('spell').onclick=()=>{ pop(); speakSeq([letters.join(', '), o.w], 'en-US'); };
   document.getElementById('next').onclick=()=>{ engIdx=(engIdx+1)%list.length; engLearnWord(cat); setTimeout(()=>speak(list[engIdx].w,'en-US',0.85),150); };
   document.getElementById('prev').onclick=()=>{ engIdx=(engIdx-1+list.length)%list.length; engLearnWord(cat); setTimeout(()=>speak(list[engIdx].w,'en-US',0.85),150); };
   setTimeout(say,120);
@@ -599,7 +677,7 @@ function engPlayWord(cat){
     const fb=document.getElementById('fb');
     if(b.dataset.w===answer.w){
       eq.done=true; b.classList.add('right'); chime(true); confetti(); addStar();
-      const p=rnd(praise); fb.className='feedback g'; fb.textContent=p+' ⭐'; speak('Yes! '+answer.w,'en-US',0.9);
+      const p=rnd(praise); fb.className='feedback g'; fb.textContent=p+' ⭐'; speak(answer.w,'en-US',0.9);
       setTimeout(()=>engPlayWord(cat),1400);
     }else{
       b.classList.add('wrong'); chime(false);
@@ -633,6 +711,10 @@ function mathMenu(){
     </div>`;
   document.querySelectorAll('[data-op]').forEach(b=>b.onclick=()=>{ mathOp=b.dataset.op; chime(true); renderMath(); });
 }
+// Thai number words 0–25 (spoken math is composed from these + operator clips)
+const NUMTH=['ศูนย์','หนึ่ง','สอง','สาม','สี่','ห้า','หก','เจ็ด','แปด','เก้า','สิบ','สิบเอ็ด','สิบสอง','สิบสาม','สิบสี่','สิบห้า','สิบหก','สิบเจ็ด','สิบแปด','สิบเก้า','ยี่สิบ','ยี่สิบเอ็ด','ยี่สิบสอง','ยี่สิบสาม','ยี่สิบสี่','ยี่สิบห้า'];
+const OPWORD={'+':'บวก','-':'ลบ','×':'คูณ'};
+function numTH(n){ return (n>=0 && n<NUMTH.length) ? NUMTH[n] : String(n); }
 function makeProblem(op){
   let a,b,ans,vis='';
   if(op==='+'){ a=1+Math.floor(Math.random()*9); b=1+Math.floor(Math.random()*(10-a<1?1:11-a)); if(a+b>15){b=1+Math.floor(Math.random()*5);} ans=a+b;
@@ -660,18 +742,18 @@ function mathQuiz(){
       ${p.opts.map(o=>`<button class="opt" data-a="${o}">${o}</button>`).join('')}
     </div>
     <div class="feedback" id="fb"></div>`;
-  document.getElementById('hint').onclick=()=>speak(`${p.a} ${opword} ${p.b} เท่ากับเท่าไร`,'th-TH',0.95);
+  document.getElementById('hint').onclick=()=>speakSeq([numTH(p.a), OPWORD[mathOp], numTH(p.b), 'เท่ากับเท่าไร']);
   document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
     if(mq.done) return;
     const fb=document.getElementById('fb');
     if(parseInt(b.dataset.a,10)===p.ans){
       mq.done=true; b.classList.add('right'); chime(true); confetti(); addStar();
       const pr=rnd(praise); fb.className='feedback g'; fb.textContent=`${p.a} ${p.op} ${p.b} = ${p.ans}  ⭐`;
-      speak(pr+` ${p.a} ${opword} ${p.b} เท่ากับ ${p.ans}`,'th-TH',1);
+      speakSeq([pr, numTH(p.a), OPWORD[mathOp], numTH(p.b), 'เท่ากับ', numTH(p.ans)]);
       setTimeout(mathQuiz,1600);
     }else{
       b.classList.add('wrong'); chime(false);
-      fb.className='feedback b'; fb.textContent=rnd(retry);
+      const r=rnd(retry); fb.className='feedback b'; fb.textContent=r; speak(r,'th-TH',1);
       setTimeout(()=>b.classList.remove('wrong'),450);
     }
   });
